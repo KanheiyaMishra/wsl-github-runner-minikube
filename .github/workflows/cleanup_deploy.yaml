@@ -1,0 +1,21 @@
+name: Cleanup Minikube Deployment
+
+on:
+  workflow_dispatch:   # allows manual trigger from GitHub Actions UI
+
+jobs:
+  cleanup:
+    runs-on: self-hosted   # WSL runner
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Delete Deployment and Service
+        run: |
+          kubectl delete -f k8s/deployment.yaml --ignore-not-found
+          kubectl delete -f k8s/service.yaml --ignore-not-found
+
+      - name: Verify Cleanup
+        run: |
+          echo "Remaining resources in cluster:"
+          kubectl get all
