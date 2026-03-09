@@ -21,12 +21,15 @@ jobs:
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 
+      - name: Wait for Deployment to be Ready
+        run: |
+          kubectl rollout status deployment/test-app --timeout=120s
+
       - name: Verify Pods
-        run: kubectl get pods
+        run: kubectl get pods -o wide
 
       - name: Smoke Test App
         run: |
           kubectl port-forward svc/test-app-service 8080:80 &
-          sleep 5
+          sleep 10
           curl -s http://localhost:8080
-
