@@ -1,1 +1,32 @@
+name: Deploy Test App to Minikube
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # WSL runner
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image inside Minikube
+        run: |
+          eval $(minikube docker-env)
+          docker build -t test-app:latest ./app
+
+      - name: Deploy to Minikube
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Verify Pods
+        run: kubectl get pods
+
+      - name: Smoke Test App
+        run: |
+          kubectl port-forward svc/test-app-service 8080:80 &
+          sleep 5
+          curl -s http://localhost:8080
 
