@@ -1,13 +1,12 @@
 name: Deploy Test App to Minikube
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main" ]
 
 jobs:
   deploy:
-    runs-on: self-hosted   # WSL runner
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -17,6 +16,11 @@ jobs:
           eval $(minikube docker-env)
           docker build -t test-app:latest ./app
 
+      - name: Cleanup old resources
+        run: |
+          kubectl delete -f k8s/deployment.yaml --ignore-not-found
+          kubectl delete -f k8s/service.yaml --ignore-not-found
+
       - name: Deploy to Minikube
         run: |
           kubectl apply -f k8s/deployment.yaml
@@ -24,7 +28,7 @@ jobs:
 
       - name: Wait for Deployment to be Ready
         run: |
-          kubectl rollout status deployment/test-app --timeout=120s
+          kubectl rollout status deployment/test-app --timeout=180s
 
       - name: Verify Pods
         run: kubectl get pods -o wide
